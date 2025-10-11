@@ -1,6 +1,6 @@
 # SPAiN - Spanish Partnership for Autoimmune Neuropathies
 
-This is the website for the **Spanish Partnership for Autoimmune Neuropathies (SPAiN)** project. The site provides a comprehensive protocol and resources for the coordination, collection, and management of clinical and biological data for patients with autoimmune neuropathies across Spain.
+This is the internal website for the **Spanish Partnership for Autoimmune Neuropathies (SPAiN)** project. The site provides a comprehensive protocol and resources for the coordination, collection, and management of clinical and biological data for patients with autoimmune neuropathies across Spain.
 
 ## About the Project
 
