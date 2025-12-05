@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Pacientes HSP - Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f5f8;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        /* Pantalla de login */
+        #login-screen {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        #login-screen h1 {
+            margin-top: 0;
+        }
+        
+        #login-screen input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        #login-screen button {
+            width: 100%;
+            padding: 12px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        #login-screen button:hover {
+            background: #1565c0;
+        }
+        
+        #error-login {
+            color: #c62828;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        /* Contenido principal (oculto hasta login) */
+        #main-content {
+            display: none;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+        h1 {
+            text-align: center;
+            margin-top: 0;
+        }
+        #status {
+            font-size: 0.9rem;
+            color: #00695c;
+            margin-bottom: 10px;
+        }
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        .toolbar label {
+            font-weight: 500;
+            margin-right: 4px;
+        }
+        select, input[type="text"], input[type="date"], input[type="password"], textarea {
+            font-size: 0.9rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            padding: 4px 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #eef1f8;
+        }
+        tr:nth-child(even) {
+            background: #fafafa;
+        }
+        tr.seleccionado {
+            background: #e3f2fd !important;
+        }
+        .panel-edicion {
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+            margin-top: 10px;
+            display: none;
+        }
+        .panel-edicion.visible {
+            display: block;
+        }
+        .panel-edicion h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+        }
+        .campo {
+            margin-bottom: 8px;
+        }
+        .campo label {
+            display: block;
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 2px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px 16px;
+        }
+        button {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-guardar {
+            background: #1976d2;
+            color: white;
+            margin-top: 10px;
+        }
+        .btn-guardar:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+        .btn-crear {
+            background: #388e3c;
+            color: white;
+            margin-top: 10px;
+        }
+        .btn-exportar {
+            background: #555;
+            color: white;
+        }
+        .btn-logout {
+            background: #c62828;
+            color: white;
+        }
+        #mensaje-guardar, #mensaje-nuevo {
+            font-size: 0.85rem;
+            margin-top: 6px;
+            color: #388e3c;
+        }
+        .separador {
+            border-top: 1px solid #ddd;
+            margin: 20px 0 10px;
+        }
+
+        /* Muestras dinámicas */
+        .muestras-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .muestra-item {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .muestra-item input[type="text"] {
+            flex: 1;
+        }
+        .muestra-item input[type="date"] {
+            flex: 0 0 140px;
+        }
+        .btn-muestra {
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+        }
+        .btn-eliminar-muestra {
+            background: #c62828;
+            color: #fff;
+        }
+        .btn-anadir-muestra {
+            background: #1976d2;
+            color: #fff;
+        }
+
+        .btn-eliminar-paciente {
+            background: #c62828;
+            color: white;
+            margin-top: 10px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- PANTALLA DE LOGIN -->
+<div id="login-screen">
+    <h1>🔒 Acceso restringido</h1>
+    <p>Introduce la contraseña para acceder</p>
+    <input type="password" id="passwordInput" placeholder="Contraseña" />
+    <button id="btnLogin">Entrar</button>
+    <div id="error-login"></div>
+</div>
+
+<!-- CONTENIDO PRINCIPAL (se muestra después del login) -->
+<div id="main-content">
+    <div class="container">
+        <h1>📋 Pacientes HSP</h1>
+        <div style="text-align: right; margin-bottom: 10px;">
+            <button class="btn-logout" id="btnLogout">Cerrar sesión</button>
+        </div>
+        
+        <div id="status">Conectando con Firebase...</div>
+
+        <div class="toolbar">
+            <label>Buscar:</label>
+            <input type="text" id="buscador" placeholder="Código, nombre, NHC..." style="flex: 1; min-width: 200px;" />
+            
+            <label>Filtrar por NAi:</label>
+            <select id="filtro-nai">
+                <option value="">Todos</option>
+                <option value="NAi-A">NAi-A</option>
+                <option value="NAi-C">NAi-C</option>
+            </select>
+            
+            <button class="btn-exportar" id="btn-exportar">Exportar CSV</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>NAi</th>
+                    <th>Nombre</th>
+                    <th>NHC</th>
+                    <th>NAi Cáncer</th>
+                    <th>NAi Pediátrica</th>
+                    <th>Muestras Código SPAiN</th>
+                    <th>Fecha llegada</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+
+        <div class="panel-edicion" id="panel-edicion">
+            <h2>✏️ Editar paciente seleccionado</h2>
+            <form id="form-edicion">
+                <div class="form-grid">
+                    <div class="campo">
+                        <label>NAi *</label>
+                        <select id="campo-brazo" required>
+                            <option value="">Seleccione...</option>
+                            <option value="NAi-A">NAi-A</option>
+                            <option value="NAi-C">NAi-C</option>
+                        </select>
+                    </div>
+                    <div class="campo">
+                        <label>Nombre</label>
+                        <input type="text" id="campo-nombre" />
+                    </div>
+                    <div class="campo">
+                        <label>NHC</label>
+                        <input type="text" id="campo-nhc" />
+                    </div>
+                    <div class="campo">
+                        <label>NAi Cáncer</label>
+                        <input type="text" id="campo-nai-cancer" />
+                    </div>
+                    <div class="campo">
+                        <label>NAi Pediátrica</label>
+                        <input type="text" id="campo-nai-pediatrica" />
+                    </div>
+                </div>
+
+                <div class="campo" style="margin-top: 10px;">
+                    <label>Muestras (Código SPAiN y fecha de llegada)</label>
+                    <div id="contenedor-muestras" class="muestras-lista"></div>
+                    <button type="button" class="btn-muestra btn-anadir-muestra" id="btnAnadirMuestraEdicion">+ Añadir muestra</button>
+                </div>
+
+                <button type="submit" class="btn-guardar" id="btn-guardar" disabled>Guardar cambios</button>
+                <button type="button" class="btn-eliminar-paciente" id="btn-eliminar-paciente" disabled>Eliminar paciente</button>
+                <div id="mensaje-guardar"></div>
+            </form>
+        </div>
+
+        <div class="separador"></div>
+        <div class="panel-edicion visible">
+            <h2>➕ Crear nuevo paciente</h2>
+            <form id="form-nuevo">
+                <div class="form-grid">
+                    <div class="campo">
+                        <label>Código (ID) *</label>
+                        <input type="text" id="nuevo-codigo" required placeholder="Ej: HSP-A-001" />
+                    </div>
+                    <div class="campo">
+                        <label>NAi *</label>
+                        <select id="nuevo-brazo" required>
+                            <option value="">Seleccione...</option>
+                            <option value="NAi-A">NAi-A</option>
+                            <option value="NAi-C">NAi-C</option>
+                        </select>
+                    </div>
+                    <div class="campo">
+                        <label>Nombre</label>
+                        <input type="text" id="nuevo-nombre" />
+                    </div>
+                    <div class="campo">
+                        <label>NHC</label>
+                        <input type="text" id="nuevo-nhc" />
+                    </div>
+                    <div class="campo">
+                        <label>NAi Cáncer</label>
+                        <input type="text" id="nuevo-nai-cancer" />
+                    </div>
+                    <div class="campo">
+                        <label>NAi Pediátrica</label>
+                        <input type="text" id="nuevo-nai-pediatrica" />
+                    </div>
+                </div>
+
+                <div class="campo" style="margin-top: 10px;">
+                    <label>Muestras (Código SPAiN y fecha de llegada)</label>
+                    <div id="contenedor-muestras-nuevo" class="muestras-lista"></div>
+                    <button type="button" class="btn-muestra btn-anadir-muestra" id="btnAnadirMuestraNuevo">+ Añadir muestra</button>
+                </div>
+
+                <button type="submit" class="btn-crear">Crear paciente</button>
+                <div id="mensaje-nuevo"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ===== CONFIGURACIÓN DE FIREBASE =====
+const firebaseConfig = {
+    apiKey: "AIzaSyCoP65na7QaaKECUsbMJBEi6oHOp5IOdI4",
+    authDomain: "pacientes-hsp.firebaseapp.com",
+    databaseURL: "https://pacientes-hsp-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "pacientes-hsp",
+    storageBucket: "pacientes-hsp.firebasestorage.app",
+    messagingSenderId: "824513585740",
+    appId: "1:824513585740:web:4a8055100fdbb6e3bccae9",
+    measurementId: "G-7S7601PLQH"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Usuario: lpanicot@santpau.cat
+// Contraseña: HSP_Registre
+const USER_EMAIL = "lpanicot@santpau.cat";
+
+// ===== ELEMENTOS DEL DOM =====
+const loginScreen = document.getElementById("login-screen");
+const mainContent = document.getElementById("main-content");
+const passwordInput = document.getElementById("passwordInput");
+const errorLogin = document.getElementById("error-login");
+const status = document.getElementById("status");
+const tbody = document.getElementById("tbody");
+const buscador = document.getElementById("buscador");
+const filtroNai = document.getElementById("filtro-nai");
+const form = document.getElementById("form-edicion");
+const formNuevo = document.getElementById("form-nuevo");
+const btnGuardar = document.getElementById("btn-guardar");
+const btnEliminarPaciente = document.getElementById("btn-eliminar-paciente");
+const btnExportar = document.getElementById("btn-exportar");
+const mensajeGuardar = document.getElementById("mensaje-guardar");
+const mensajeNuevo = document.getElementById("mensaje-nuevo");
+
+// Campos edición
+const campoBrazo = document.getElementById("campo-brazo");
+const campoNombre = document.getElementById("campo-nombre");
+const campoNhc = document.getElementById("campo-nhc");
+const campoNaiCancer = document.getElementById("campo-nai-cancer");
+const campoNaiPediatrica = document.getElementById("campo-nai-pediatrica");
+const contenedorMuestras = document.getElementById("contenedor-muestras");
+
+// Campos nuevo paciente
+const nuevoCodigo = document.getElementById("nuevo-codigo");
+const nuevoBrazo = document.getElementById("nuevo-brazo");
+const nuevoNombre = document.getElementById("nuevo-nombre");
+const nuevoNhc = document.getElementById("nuevo-nhc");
+const nuevoNaiCancer = document.getElementById("nuevo-nai-cancer");
+const nuevoNaiPediatrica = document.getElementById("nuevo-nai-pediatrica");
+const contenedorMuestrasNuevo = document.getElementById("contenedor-muestras-nuevo");
+
+// ===== VARIABLES GLOBALES =====
+let pacientesMap = new Map();
+let pacienteSeleccionadoId = null;
+let filtroNaiValue = "";
+let filtroTexto = "";
+
+// ===== FUNCIONES AUXILIARES (FECHAS / MUESTRAS) =====
+function formatearFechaTabla(date) {
+    if (!date) return "";
+    const d = date instanceof Date ? date : (date.toDate ? date.toDate() : new Date(date));
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+// Normaliza las muestras a un array de { codigo, fecha_llegada: Date|null }
+// Soporta datos nuevos (muestras[]) y antiguos (muestras_codigo_spain + fecha_llegada)
+function normalizarMuestras(data) {
+    if (Array.isArray(data.muestras) && data.muestras.length > 0) {
+        return data.muestras.map(m => ({
+            codigo: m.codigo || "",
+            fecha_llegada: m.fecha_llegada
+                ? (m.fecha_llegada.toDate ? m.fecha_llegada.toDate() : new Date(m.fecha_llegada))
+                : null
+        }));
+    }
+
+    const texto = data.muestras_codigo_spain || "";
+    const lineas = texto.split("\n").filter(l => l.trim() !== "");
+    const fechaGlobal = data.fecha_llegada
+        ? (data.fecha_llegada.toDate ? data.fecha_llegada.toDate() : new Date(data.fecha_llegada))
+        : null;
+
+    return lineas.map(cod => ({
+        codigo: cod,
+        fecha_llegada: fechaGlobal
+    }));
+}
+
+// Rellena un contenedor de muestras con array de {codigo, fecha_llegada}
+function setMuestrasEnContenedor(contenedor, muestras) {
+    contenedor.innerHTML = "";
+    if (!muestras || muestras.length === 0) {
+        anadirItemMuestra(contenedor, { codigo: "", fecha_llegada: null });
+    } else {
+        muestras.forEach(m => anadirItemMuestra(contenedor, m));
+    }
+}
+
+// Añade una fila: [Código][Fecha][X]
+function anadirItemMuestra(contenedor, muestra = { codigo: "", fecha_llegada: null }) {
+    const div = document.createElement("div");
+    div.className = "muestra-item";
+    
+    const inputCodigo = document.createElement("input");
+    inputCodigo.type = "text";
+    inputCodigo.placeholder = "Código de muestra";
+    inputCodigo.value = muestra.codigo || "";
+
+    const inputFecha = document.createElement("input");
+    inputFecha.type = "date";
+    if (muestra.fecha_llegada) {
+        const d = muestra.fecha_llegada instanceof Date
+            ? muestra.fecha_llegada
+            : (muestra.fecha_llegada.toDate ? muestra.fecha_llegada.toDate() : new Date(muestra.fecha_llegada));
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        inputFecha.value = `${year}-${month}-${day}`;
+    }
+
+    const btnEliminar = document.createElement("button");
+    btnEliminar.type = "button";
+    btnEliminar.className = "btn-muestra btn-eliminar-muestra";
+    btnEliminar.textContent = "✕";
+    btnEliminar.onclick = () => div.remove();
+    
+    div.appendChild(inputCodigo);
+    div.appendChild(inputFecha);
+    div.appendChild(btnEliminar);
+    contenedor.appendChild(div);
+}
+
+// Devuelve array de {codigo, fecha_llegada: Date|null} desde un contenedor
+function obtenerMuestrasDesdeContenedor(contenedor) {
+    const items = contenedor.querySelectorAll(".muestra-item");
+    const muestras = [];
+    items.forEach(div => {
+        const inputCodigo = div.querySelector("input[type='text']");
+        const inputFecha = div.querySelector("input[type='date']");
+        const codigo = inputCodigo ? inputCodigo.value.trim() : "";
+        const fechaStr = inputFecha ? inputFecha.value : "";
+        
+        if (!codigo && !fechaStr) return; // ignora filas vacías
+        
+        const fecha_llegada = fechaStr ? new Date(fechaStr + "T00:00:00") : null;
+        muestras.push({ codigo, fecha_llegada });
+    });
+    return muestras;
+}
+
+// Inicializa el formulario de nuevo paciente con una fila vacía
+setMuestrasEnContenedor(contenedorMuestrasNuevo, []);
+
+// ===== FUNCIONES DE AUTENTICACIÓN =====
+const btnLogin = document.getElementById("btnLogin");
+const btnLogout = document.getElementById("btnLogout");
+
+btnLogin.addEventListener("click", () => {
+    const password = passwordInput.value;
+    errorLogin.textContent = "";
+    
+    signInWithEmailAndPassword(auth, USER_EMAIL, password)
+        .then(() => {
+            console.log("Login exitoso");
+        })
+        .catch((error) => {
+            console.error("Error login:", error);
+            errorLogin.textContent = "Contraseña incorrecta";
+        });
+});
+
+if (btnLogout) {
+    btnLogout.addEventListener("click", () => {
+        signOut(auth);
+    });
+}
+
+// Permitir login con Enter
+passwordInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        btnLogin.click();
+    }
+});
+
+// ===== OBSERVER DE AUTENTICACIÓN =====
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        loginScreen.style.display = "none";
+        mainContent.style.display = "block";
+        status.textContent = "✅ Conectado a Firebase";
+        iniciarEscuchaFirestore();
+    } else {
+        loginScreen.style.display = "block";
+        mainContent.style.display = "none";
+    }
+});
+
+// ===== FIRESTORE: ESCUCHA Y TABLA =====
+function iniciarEscuchaFirestore() {
+    const q = query(collection(db, "pacientes"), orderBy("codigo"));
+    
+    onSnapshot(
+        q,
+        (snapshot) => {
+            pacientesMap.clear();
+            snapshot.forEach((docSnap) => {
+                pacientesMap.set(docSnap.id, docSnap.data());
+            });
+            renderTabla();
+            if (pacienteSeleccionadoId) {
+                const fila = Array.from(tbody.querySelectorAll("tr")).find(
+                    tr => tr.dataset.id === pacienteSeleccionadoId
+                );
+                if (fila) {
+                    seleccionarFila(pacienteSeleccionadoId, fila);
+                }
+            }
+        },
+        (error) => {
+            console.error(error);
+            status.textContent = "❌ Error al leer datos de Firestore.";
+        }
+    );
+}
+
+function obtenerPacientesFiltrados() {
+    const lista = [];
+    for (const [id, data] of pacientesMap) {
+        const brazo = data.brazo || "";
+        if (filtroNaiValue && brazo !== filtroNaiValue) continue;
+        
+        if (filtroTexto) {
+            const codigo = data.codigo || id;
+            const nombre = data.nombre || "";
+            const nhc = data.nhc || "";
+            const naiC = data.nai_cancer || "";
+            const naiP = data.nai_pediatrica || "";
+            const muestrasNorm = normalizarMuestras(data);
+            const muestrasCodigos = muestrasNorm.map(m => m.codigo).join(" ");
+
+            const busqueda = (codigo + nombre + nhc + naiC + naiP + muestrasCodigos).toLowerCase();
+            if (!busqueda.includes(filtroTexto.toLowerCase())) continue;
+        }
+        
+        lista.push({ id, data, brazo });
+    }
+    return lista;
+}
+
+function renderTabla() {
+    tbody.innerHTML = "";
+    const filas = obtenerPacientesFiltrados();
+    
+    if (filas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#999;">No hay pacientes</td></tr>';
+        return;
+    }
+    
+    filas.forEach(({ id, data, brazo }) => {
+        const tr = document.createElement("tr");
+        tr.dataset.id = id;
+        if (id === pacienteSeleccionadoId) tr.classList.add("seleccionado");
+        
+        const codigo = data.codigo || id;
+        const nombre = data.nombre || "";
+        const nhc = data.nhc ?? "";
+        const naiC = data.nai_cancer || "";
+        const naiP = data.nai_pediatrica || "";
+
+        const muestrasNorm = normalizarMuestras(data);
+        const muestrasCodigosHtml = muestrasNorm.map(m => m.codigo || "").join("<br>");
+        const fechasHtml = muestrasNorm
+            .map(m => m.fecha_llegada ? formatearFechaTabla(m.fecha_llegada) : "")
+            .join("<br>");
+        
+        tr.innerHTML = `
+            <td>${codigo}</td>
+            <td>${brazo}</td>
+            <td>${nombre}</td>
+            <td>${nhc}</td>
+            <td>${naiC}</td>
+            <td>${naiP}</td>
+            <td>${muestrasCodigosHtml}</td>
+            <td>${fechasHtml}</td>
+        `;
+        
+        tr.addEventListener("click", () => seleccionarFila(id, tr));
+        tbody.appendChild(tr);
+    });
+}
+
+// ===== SELECCIÓN / EDICIÓN DE PACIENTES =====
+function seleccionarFila(id, tr) {
+    document.querySelectorAll("#tbody tr").forEach(r => r.classList.remove("seleccionado"));
+    tr.classList.add("seleccionado");
+    
+    pacienteSeleccionadoId = id;
+    const data = pacientesMap.get(id);
+    
+    campoBrazo.value = data.brazo || "";
+    campoNombre.value = data.nombre || "";
+    campoNhc.value = data.nhc ?? "";
+    campoNaiCancer.value = data.nai_cancer || "";
+    campoNaiPediatrica.value = data.nai_pediatrica || "";
+    
+    const muestrasNorm = normalizarMuestras(data);
+    setMuestrasEnContenedor(contenedorMuestras, muestrasNorm);
+    btnGuardar.disabled = false;
+    btnEliminarPaciente.disabled = false;
+    
+    const panelEdicion = document.getElementById("panel-edicion");
+    panelEdicion.classList.add("visible");
+}
+
+function deseleccionarPaciente() {
+    document.querySelectorAll("#tbody tr").forEach(r => r.classList.remove("seleccionado"));
+    pacienteSeleccionadoId = null;
+    btnGuardar.disabled = true;
+    btnEliminarPaciente.disabled = true;
+    
+    const panelEdicion = document.getElementById("panel-edicion");
+    panelEdicion.classList.remove("visible");
+}
+
+// Deseleccionar al hacer click fuera
+document.addEventListener("click", (e) => {
+    const tabla = document.querySelector("table");
+    const panelEdicion = document.getElementById("panel-edicion");
+    
+    if (!tabla.contains(e.target) && !panelEdicion.contains(e.target)) {
+        deseleccionarPaciente();
+    }
+});
+
+// ===== FILTROS =====
+filtroNai.addEventListener("change", () => {
+    filtroNaiValue = filtroNai.value;
+    renderTabla();
+});
+
+buscador.addEventListener("input", () => {
+    filtroTexto = buscador.value;
+    renderTabla();
+});
+
+// ===== GUARDAR CAMBIOS DE PACIENTE =====
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!pacienteSeleccionadoId) return;
+    
+    const ref = doc(db, "pacientes", pacienteSeleccionadoId);
+    const muestrasArray = obtenerMuestrasDesdeContenedor(contenedorMuestras);
+    
+    try {
+        await updateDoc(ref, {
+            brazo: campoBrazo.value,
+            nombre: campoNombre.value || null,
+            nhc: campoNhc.value || null,
+            nai_cancer: campoNaiCancer.value || null,
+            nai_pediatrica: campoNaiPediatrica.value || null,
+            muestras: muestrasArray.length ? muestrasArray : null,
+            // campos antiguos a null para mantener esquema consistente
+            muestras_codigo_spain: null,
+            fecha_llegada: null
+        });
+        mensajeGuardar.textContent = "Cambios guardados correctamente.";
+    } catch (err) {
+        console.error(err);
+        mensajeGuardar.textContent = "Error al guardar cambios.";
+    }
+});
+
+// ===== ELIMINAR PACIENTE =====
+btnEliminarPaciente.addEventListener("click", async () => {
+    if (!pacienteSeleccionadoId) return;
+    const confirmar = confirm("¿Seguro que quieres eliminar este paciente y todas sus muestras?");
+    if (!confirmar) return;
+
+    try {
+        const ref = doc(db, "pacientes", pacienteSeleccionadoId);
+        await deleteDoc(ref);
+        mensajeGuardar.textContent = "Paciente eliminado correctamente.";
+        pacienteSeleccionadoId = null;
+        deseleccionarPaciente();
+    } catch (err) {
+        console.error(err);
+        mensajeGuardar.textContent = "Error al eliminar paciente.";
+    }
+});
+
+// ===== CREAR NUEVO PACIENTE =====
+formNuevo.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const codigo = nuevoCodigo.value.trim();
+    if (!codigo) {
+        mensajeNuevo.textContent = "El código es obligatorio.";
+        return;
+    }
+    
+    const ref = doc(db, "pacientes", codigo);
+    const muestrasArrayNuevo = obtenerMuestrasDesdeContenedor(contenedorMuestrasNuevo);
+    
+    try {
+        await setDoc(ref, {
+            codigo: codigo,
+            brazo: nuevoBrazo.value,
+            nombre: nuevoNombre.value || null,
+            nhc: nuevoNhc.value || null,
+            nai_cancer: nuevoNaiCancer.value || null,
+            nai_pediatrica: nuevoNaiPediatrica.value || null,
+            muestras: muestrasArrayNuevo.length ? muestrasArrayNuevo : null,
+            muestras_codigo_spain: null,
+            fecha_llegada: null
+        });
+        
+        mensajeNuevo.textContent = "Paciente creado correctamente.";
+        nuevoCodigo.value = "";
+        nuevoNombre.value = "";
+        nuevoNhc.value = "";
+        nuevoNaiCancer.value = "";
+        nuevoNaiPediatrica.value = "";
+        setMuestrasEnContenedor(contenedorMuestrasNuevo, []);
+    } catch (err) {
+        console.error(err);
+        mensajeNuevo.textContent = "Error al crear paciente.";
+    }
+});
+
+// ===== EXPORTAR CSV =====
+function escapeCsv(value) {
+    if (value == null) return "";
+    const str = String(value);
+    if (/[;"\n]/.test(str)) {
+        return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+}
+
+btnExportar.addEventListener("click", () => {
+    const filas = obtenerPacientesFiltrados();
+    if (filas.length === 0) {
+        alert("No hay pacientes para exportar con los filtros actuales.");
+        return;
+    }
+    
+    let csv = "Codigo;NAi;Nombre;NHC;NAi Cáncer;NAi Pediátrica;Muestras Código SPAiN;Fecha llegada\r\n";
+    
+    filas.forEach(({ id, data: d, brazo }) => {
+        const codigo = d.codigo || id;
+        const nombre = d.nombre || "";
+        const nhc = d.nhc ?? "";
+        const naiC = d.nai_cancer || "";
+        const naiP = d.nai_pediatrica || "";
+
+        const muestrasNorm = normalizarMuestras(d);
+        const muestrasString = muestrasNorm.map(m => m.codigo).join(" | ");
+        const fechasString = muestrasNorm
+            .map(m => m.fecha_llegada ? formatearFechaTabla(m.fecha_llegada) : "")
+            .join(" | ");
+        
+        csv += [
+            escapeCsv(codigo),
+            escapeCsv(brazo),
+            escapeCsv(nombre),
+            escapeCsv(nhc),
+            escapeCsv(naiC),
+            escapeCsv(naiP),
+            escapeCsv(muestrasString),
+            escapeCsv(fechasString)
+        ].join(";") + "\r\n";
+    });
+    
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pacientes_hsp.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>
